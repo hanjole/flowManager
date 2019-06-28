@@ -318,24 +318,19 @@ public class FlowManager {
 
 
     private static NetWorkPacket getAppFlowInfo(String pakageName, Context context) {
+        NetWorkPacket flowInfo = new NetWorkPacket();
 
         PackageManager pms = context.getPackageManager();
-        List<PackageInfo> packinfos = pms
-                .getInstalledPackages(PackageManager.GET_PERMISSIONS);
-        NetWorkPacket flowInfo = new NetWorkPacket();
-        for (PackageInfo packinfo : packinfos) {
-            String appName = packinfo.packageName;
-            if (!TextUtils.isEmpty(appName)) {
-                if (appName.equals(pakageName)) {
-                    int uid = packinfo.applicationInfo.uid;
+        try {
+            ApplicationInfo ai = pms.getApplicationInfo(pakageName,0);
+            int uid = ai.uid;
 
-                    flowInfo.upPacket = TrafficStats.getUidRxBytes(uid);
-                    flowInfo.downPacket = TrafficStats.getUidTxBytes(uid);
-                    flowInfo.packets = flowInfo.upPacket+flowInfo.downPacket;
-                    flowInfo.bucketTime = System.currentTimeMillis();
-                    break;
-                }
-            }
+            flowInfo.upPacket = TrafficStats.getUidRxBytes(uid);
+            flowInfo.downPacket = TrafficStats.getUidTxBytes(uid);
+            flowInfo.packets = flowInfo.upPacket+flowInfo.downPacket;
+            flowInfo.bucketTime = System.currentTimeMillis();
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
         }
         return flowInfo;
     }
